@@ -61,33 +61,70 @@ gorgetaOtima([9,12,15,15]).
 
 %Funções de pertinência para cada conjunto
 
-fn_ruim(X,P) :- ruim(Conj), trapezoidal(X,Conj,P).
-fn_regular(X,P) :- regular(Conj), triangular(X,Conj,P).
-fn_bom(X,P) :- bom(Conj), triangular(X,Conj,P).
-fn_otimo(X,P) :- otimo(Conj), trapezoidal(X,Conj,P).
+fn_comida_ruim(X,P) :- ruim(Conj), trapezoidal(X,Conj,P).
+fn_comida_regular(X,P) :- regular(Conj), triangular(X,Conj,P).
+fn_comida_bom(X,P) :- bom(Conj), triangular(X,Conj,P).
+fn_comida_otimo(X,P) :- otimo(Conj), trapezoidal(X,Conj,P).
 
-fn_gorgetaFraca(X,P) :- gorgetaFraca(Conj), trapezoidal(X,Conj,P).
-fn_gorgetaRegular(X,P) :- gorgetaRegular(Conj), triangular(X,Conj,P).
-fn_gorgetaBoa(X,P) :- gorgetaBoa(Conj), triangular(X,Conj,P).
-fn_gorgetaOtima(X,P) :- gorgetaOtima(Conj), trapezoidal(X,Conj,P).
+fn_atendimento_ruim(X,P) :- ruim(Conj), trapezoidal(X,Conj,P).
+fn_atendimento_regular(X,P) :- regular(Conj), triangular(X,Conj,P).
+fn_atendimento_bom(X,P) :- bom(Conj), triangular(X,Conj,P).
+fn_atendimento_otimo(X,P) :- otimo(Conj), trapezoidal(X,Conj,P).
+
+fn_gorgeta_fraca(X,P) :- gorgetaFraca(Conj), trapezoidal(X,Conj,P).
+fn_gorgeta_regular(X,P) :- gorgetaRegular(Conj), triangular(X,Conj,P).
+fn_gorgeta_boa(X,P) :- gorgetaBoa(Conj), triangular(X,Conj,P).
+fn_gorgeta_otima(X,P) :- gorgetaOtima(Conj), trapezoidal(X,Conj,P).
 
 %Variaveis Linguisticas
 
-qualidadeAtendimento(X,Pertinencia) :- fn_ruim(X,Ru), fn_regular(X,Re), fn_bom(X,B), fn_otimo(X,O), Pertinencia = [Ru,Re,B,O].
-qualidadeComida(X,Pertinencia) :- fn_ruim(X,Ru), fn_regular(X,Re), fn_bom(X,B), fn_otimo(X,O), Pertinencia = [Ru,Re,B,O].
+qualidadeAtendimento(X,Pertinencia) :- fn_atendimento_ruim(X,Ru), fn_atendimento_regular(X,Re), fn_atendimento_bom(X,B), fn_atendimento_otimo(X,O), Pertinencia = [Ru,Re,B,O].
+qualidadeComida(X,Pertinencia) :- fn_comida_ruim(X,Ru), fn_comida_regular(X,Re), fn_comida_bom(X,B), fn_comida_otimo(X,O), Pertinencia = [Ru,Re,B,O].
+gorgeta(X,Pertinencia):- fn_gorgeta_fraca(X,F), fn_gorgeta__regular(X,R), fn_gorgeta_boa(X,Bo), fn_gorgeta_otima(X,Ot), Pertinencia = [F,R,Bo,Ot].
 
 
 % Regras de inferência e implicação
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 % Se Atendimento = otimo , Comida = otimo Então Gorgeta = otima
-regra1([Ru,Re,B,O],Resultado) :- O > 0, Resultado is O ; Resultado is 0.
+regra1([Aru,Are,Ab,Ao],[Cru,Cre,Cb,Co],[Gf,Gr,Gb,Go],) :- min(Ao,Co,Tmp), Go is Tmp.
 
-% Se SensacaoTermica = morno Então ArCondicionado = fresco
-regra2([Q,M,Fc,Fr],Resultado) :- M > 0, Resultado is M ; Resultado is 0.
+% Se Atendimento = bom , Comida = bom Então Gorgeta = boa
+regra2([Aru,Are,Ab,Ao],[Cru,Cre,Cb,Co],[Gf,Gr,Gb,Go]) :- min(Ab,Cb,Tmp), Gb is Tmp.
 
-% Se SensacaoTermica = fresco Então ArCondicionado = morno
-regra3([Q,M,Fc,Fr],Resultado) :- Fc > 0, Resultado is Fc ; Resultado is 0.
+% Se Atendimento = regular , Comida = regular Então Gorgeta = regular
+regra3([Aru,Are,Ab,Ao],[Cru,Cre,Cb,Co],[Gf,Gr,Gb,Go]) :- min(Ao,Co,Tmp), Go is Tmp.
 
-% Se SensacaoTermica = frio Então ArCondicionado = quente
-regra4([Q,M,Fc,Fr],Resultado) :- Fr > 0, Resultado is Fr ; Resultado is 0.
+% Se Atendimento = ruim , Comida = ruim Então Gorgeta = fraca
+regra4([Aru,Are,Ab,Ao],[Cru,Cre,Cb,Co],[Gf,Gr,Gb,Go]) :- min(Ao,Co,Tmp), Go is Tmp.
+
+
+% Defuzzyficação
+
+
+defuzzyficacao([Aru,Are,Ab,Ao],[Cru,Cre,Cb,Co],[Gf,Gr,Gb,Go]) :-
+       ruim(Ruim),centroide(Ruim,RuOut),
+       regular(Regular),centroide(Regular,ReOut),
+       bom(Bom),centroide(Bom,BOut),
+       otimo(Otimo),centroide(Otimo,OOut),
+       Resultado is RuOut*Ru + Re*ReOut + B*BOut + O*OOut, !.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Controlador fuzzy
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+controladorFuzzy(Comida,Atendimento,Gorjeta) :-
+
+      %Fuzzyficação
+      temperatura(Comida,Atendimento, G),
+
+      % Inferência - Implicação e Agregação
+      regra1(P,A),
+      regra2(P,B),
+      regra3(P,C),
+      regra4(P,D),
+
+      %Defuzzyficação
+      defuzzyficacao([A,B,C,D],Gorgeta), !.

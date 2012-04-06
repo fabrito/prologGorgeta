@@ -118,7 +118,7 @@ defuzzyficacao([Aru,Are,Ab,Ao],[Cru,Cre,Cb,Co],[Gf,Gr,Gb,Go]) :-
 controladorFuzzy(Comida,Atendimento,Gorjeta) :-
 
       %Fuzzyficação
-      temperatura(Comida,Atendimento, G),
+      gorgeta(Comida,Atendimento, G),
 
       % Inferência - Implicação e Agregação
       regra1(P,A),
